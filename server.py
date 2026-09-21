@@ -10,8 +10,20 @@ Chay remote (HTTP, dung cho custom connector tren claude.ai):
 
 import sys
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
-mcp = FastMCP("finance-demo")
+# Khai bao host="0.0.0.0" va tat DNS-rebinding whitelist ngay tu dau.
+# Neu khong lam vay, thu vien mac dinh coi host la 127.0.0.1 va chi
+# cho phep request tu "localhost" -> khi deploy len domain that (Railway,...)
+# se bi loi "Invalid Host header".
+mcp = FastMCP(
+    "finance-demo",
+    host="0.0.0.0",
+    port=8000,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False
+    ),
+)
 
 
 @mcp.tool()
@@ -87,8 +99,6 @@ def loan_monthly_payment(
 if __name__ == "__main__":
     if "--http" in sys.argv:
         # Streamable HTTP, dung khi deploy len internet de lam remote MCP server
-        mcp.settings.host = "0.0.0.0"
-        mcp.settings.port = 8000
         mcp.run(transport="streamable-http")
     else:
         # stdio, dung khi chay local tren may (Claude Desktop / Claude Code)
